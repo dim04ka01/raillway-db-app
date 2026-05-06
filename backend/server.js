@@ -27,16 +27,16 @@ app.use('/api/wagons', require('./routes/wagons'));
 
 // Функция инициализации базовых данных 
 async function initDatabase() {
-    // 1. Создание ролей, если их нет
+    // Создание ролей, если их нет
     const roles = ['Администрация', 'Руководитель отдела', 'Сотрудник'];
     for (const name of roles) {
         await Role.findOrCreate({ where: { name }, defaults: { name } });
     }
-    // 2. Пример отдела "Управление"
+    // Создание отдела "Управление"
     const [adminDept] = await Department.findOrCreate({ where: { name: 'Управление' }, defaults: { name: 'Управление' } });
-    // 3. Пример должности "Начальник станции"
+    // Создание должности "Начальник станции"
     const [adminPos] = await Position.findOrCreate({ where: { name: 'Начальник станции' }, defaults: { name: 'Начальник станции' } });
-    // 4. Создание администратора (если нет учётной записи admin)
+    // Создание администратора
     const existingAdmin = await UserData.findOne({ where: { login: 'admin' } });
     if (!existingAdmin) {
         // Создаём сотрудника для администратора
@@ -66,7 +66,6 @@ async function startServer() {
         console.log('Подключено к PostgreSQL');
 
         // Синхронизация моделей с базой данных
-        // alter: true – обновляет таблицы без потери данных (для разработки)
         await sequelize.sync({ alter: true });
         console.log('База данных синхронизирована');
 
