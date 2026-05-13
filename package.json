@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "railwaystationapp",
   "version": "1.0.0",
   "description": "",
@@ -15,5 +15,6 @@
   "type": "commonjs",
   "dependencies": {
     "concurrently": "^9.2.1"
-  }
+  },
+  "files.encoding": "utf8"
 }

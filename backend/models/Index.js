@@ -10,9 +10,11 @@ const UserData = require('./UserData');
 const Employee = require('./Employee');
 const LocomotiveModel = require('./LocomotiveModel');
 const Locomotive = require('./Locomotive');
+const LocomotiveMaintenanceRecord = require('./LocomotiveMaintenanceRecord');
 const WagonType = require('./WagonType');
 const WagonModel = require('./WagonModel');
 const Wagon = require('./Wagon');
+const WagonMaintenanceRecord = require('./WagonMaintenanceRecord');
 
 // Связи
 // Отделы - Бригады
@@ -24,11 +26,11 @@ BrigadeType.hasMany(Brigade, { foreignKey: 'ID_Типа_бригады' });
 Brigade.belongsTo(BrigadeType, { foreignKey: 'ID_Типа_бригады' });
 
 // Роли в системе - Данные пользователя
-UserData.belongsTo(Role, { foreignKey: 'ID_Роли', as: 'Role' });
+UserData.belongsTo(Role, { foreignKey: 'ID_Роли' });
 Role.hasMany(UserData, { foreignKey: 'ID_Роли' });
 
 // Сотрудник - Данные пользователя 
-UserData.belongsTo(Employee, { foreignKey: 'ID_Сотрудника', as: 'Employee' });
+UserData.belongsTo(Employee, { foreignKey: 'ID_Сотрудника' });
 Employee.hasOne(UserData, { foreignKey: 'ID_Сотрудника' });
 
 // Сотрудник - Бригада
@@ -51,6 +53,22 @@ Wagon.belongsTo(WagonModel, { foreignKey: 'ID_Модели_вагона' });
 WagonType.hasMany(Wagon, { foreignKey: 'ID_Типа_вагона' });
 Wagon.belongsTo(WagonType, { foreignKey: 'ID_Типа_вагона' });
 
+// Локомотив - История обслуживания локомотива
+Locomotive.hasMany(LocomotiveMaintenanceRecord, { foreignKey: 'locomotiveId' });
+LocomotiveMaintenanceRecord.belongsTo(Locomotive, { foreignKey: 'locomotiveId' });
+
+// Вагон - История обслуживания вагона
+Wagon.hasMany(WagonMaintenanceRecord, { foreignKey: 'wagonId' });
+WagonMaintenanceRecord.belongsTo(Wagon, { foreignKey: 'wagonId' });
+
+// Сотрудник - История обслуживания локомотива
+Employee.hasMany(LocomotiveMaintenanceRecord, { foreignKey: 'employeeId' });
+LocomotiveMaintenanceRecord.belongsTo(Employee, { foreignKey: 'employeeId' });
+
+// Сотрудник - История обслуживания вагона
+Employee.hasMany(WagonMaintenanceRecord, { foreignKey: 'employeeId' });
+WagonMaintenanceRecord.belongsTo(Employee, { foreignKey: 'employeeId' });
+
 // Экспортируем всё
 module.exports = {
     sequelize,
@@ -63,7 +81,9 @@ module.exports = {
     Employee,
     LocomotiveModel,
     Locomotive,
+    LocomotiveMaintenanceRecord,
     WagonType,
     WagonModel,
-    Wagon
+    Wagon,
+    WagonMaintenanceRecord
 };

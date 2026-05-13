@@ -1,9 +1,9 @@
-const router = require('express').Router();
+п»їconst router = require('express').Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { UserData, Employee, Role } = require('../models');
 
-// Регистрация нового пользователя (только для администраторов)
+// Р РµРіРёСЃС‚СЂР°С†РёСЏ РЅРѕРІРѕРіРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ (С‚РѕР»СЊРєРѕ РґР»СЏ Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂРѕРІ)
 router.post('/register', async (req, res) => {
     try {
         const { login, password, employeeId, roleId } = req.body;
@@ -14,13 +14,13 @@ router.post('/register', async (req, res) => {
             employeeId,
             roleId
         });
-        res.status(201).json({ message: 'Пользователь создан', userId: user.employeeId });
+        res.status(201).json({ message: 'РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ СЃРѕР·РґР°РЅ', userId: user.employeeId });
     } catch (err) {
         res.status(400).json({ error: err.message });
     }
 });
 
-// Логин
+// Р›РѕРіРёРЅ
 router.post('/login', async (req, res) => {
     try {
         const { login, password } = req.body;
@@ -28,9 +28,9 @@ router.post('/login', async (req, res) => {
             where: { login },
             include: [{ model: Role, as: 'Role' }, { model: Employee, as: 'Employee' }]
         });
-        if (!user) return res.status(401).json({ error: 'Неверный логин или пароль' });
+        if (!user) return res.status(401).json({ error: 'РќРµРІРµСЂРЅС‹Р№ Р»РѕРіРёРЅ РёР»Рё РїР°СЂРѕР»СЊ' });
         const match = await bcrypt.compare(password, user.password);
-        if (!match) return res.status(401).json({ error: 'Неверный логин или пароль' });
+        if (!match) return res.status(401).json({ error: 'РќРµРІРµСЂРЅС‹Р№ Р»РѕРіРёРЅ РёР»Рё РїР°СЂРѕР»СЊ' });
         const token = jwt.sign(
             { employeeId: user.employeeId, login: user.login, role: user.Role.name },
             process.env.JWT_SECRET,

@@ -1,13 +1,13 @@
-const router = require('express').Router();
+п»їconst router = require('express').Router();
 const { Employee, Brigade, Position, UserData, Role, Department } = require('../models');
 const { isAuthenticated, isAdmin, isManagerOrAdmin } = require('../middleware/auth');
 
-// Получениме списка сотрудников
+// РџРѕР»СѓС‡РµРЅРёРјРµ СЃРїРёСЃРєР° СЃРѕС‚СЂСѓРґРЅРёРєРѕРІ
 router.get('/', isAuthenticated, async (req, res) => {
     try {
         let where = {};
 
-        if (req.user.roleName === 'Руководитель отдела') {
+        if (req.user.roleName === 'Р СѓРєРѕРІРѕРґРёС‚РµР»СЊ РѕС‚РґРµР»Р°') {
             const manager = await Employee.findByPk(req.user.id, {
                 include: [{ model: Brigade, include: [Department] }]
             });
@@ -38,7 +38,7 @@ router.get('/', isAuthenticated, async (req, res) => {
     }
 });
 
-// Получение одного сотрудника
+// РџРѕР»СѓС‡РµРЅРёРµ РѕРґРЅРѕРіРѕ СЃРѕС‚СЂСѓРґРЅРёРєР°
 router.get('/:id', isAuthenticated, async (req, res) => {
     try {
         const employee = await Employee.findByPk(req.params.id, {
@@ -48,14 +48,14 @@ router.get('/:id', isAuthenticated, async (req, res) => {
                 { model: UserData, include: [Role] }
             ]
         });
-        if (!employee) return res.status(404).json({ error: 'Сотрудник не найден' });
+        if (!employee) return res.status(404).json({ error: 'РЎРѕС‚СЂСѓРґРЅРёРє РЅРµ РЅР°Р№РґРµРЅ' });
 
-        if (req.user.roleName !== 'Администрация' && req.user.roleName !== 'Руководитель отдела') {
+        if (req.user.roleName !== 'РђРґРјРёРЅРёСЃС‚СЂР°С†РёСЏ' && req.user.roleName !== 'Р СѓРєРѕРІРѕРґРёС‚РµР»СЊ РѕС‚РґРµР»Р°') {
             if (parseInt(req.params.id) !== req.user.id) {
-                return res.status(403).json({ error: 'Доступ запрещён' });
+                return res.status(403).json({ error: 'Р”РѕСЃС‚СѓРї Р·Р°РїСЂРµС‰С‘РЅ' });
             }
         }
-        if (req.user.roleName === 'Руководитель отдела') {
+        if (req.user.roleName === 'Р СѓРєРѕРІРѕРґРёС‚РµР»СЊ РѕС‚РґРµР»Р°') {
             const manager = await Employee.findByPk(req.user.id, {
                 include: [{ model: Brigade, include: [Department] }]
             });
@@ -63,10 +63,10 @@ router.get('/:id', isAuthenticated, async (req, res) => {
                 const managerDeptId = manager.Brigade.Department.id;
                 const employeeDeptId = employee.Brigade?.Department?.id;
                 if (employeeDeptId !== managerDeptId) {
-                    return res.status(403).json({ error: 'Доступ запрещён' });
+                    return res.status(403).json({ error: 'Р”РѕСЃС‚СѓРї Р·Р°РїСЂРµС‰С‘РЅ' });
                 }
             } else {
-                return res.status(403).json({ error: 'Доступ запрещён' });
+                return res.status(403).json({ error: 'Р”РѕСЃС‚СѓРї Р·Р°РїСЂРµС‰С‘РЅ' });
             }
         }
 
@@ -76,22 +76,22 @@ router.get('/:id', isAuthenticated, async (req, res) => {
     }
 });
 
-// Создание сотрудника
+// РЎРѕР·РґР°РЅРёРµ СЃРѕС‚СЂСѓРґРЅРёРєР°
 router.post('/', isAuthenticated, isManagerOrAdmin, async (req, res) => {
     try {
         const { lastName, firstName, middleName, birthDate, phone, email, brigadeId, positionId } = req.body;
 
-        if (req.user.roleName === 'Руководитель отдела') {
+        if (req.user.roleName === 'Р СѓРєРѕРІРѕРґРёС‚РµР»СЊ РѕС‚РґРµР»Р°') {
             const brigade = await Brigade.findByPk(brigadeId, { include: [Department] });
             if (!brigade) {
-                return res.status(400).json({ error: 'Бригада не найдена' });
+                return res.status(400).json({ error: 'Р‘СЂРёРіР°РґР° РЅРµ РЅР°Р№РґРµРЅР°' });
             }
             const manager = await Employee.findByPk(req.user.id, {
                 include: [{ model: Brigade, include: [Department] }]
             });
             const managerDeptId = manager.Brigade?.Department?.id;
             if (!managerDeptId || brigade.Department.id !== managerDeptId) {
-                return res.status(403).json({ error: 'Нельзя создавать сотрудника в бригаде другого отдела' });
+                return res.status(403).json({ error: 'РќРµР»СЊР·СЏ СЃРѕР·РґР°РІР°С‚СЊ СЃРѕС‚СЂСѓРґРЅРёРєР° РІ Р±СЂРёРіР°РґРµ РґСЂСѓРіРѕРіРѕ РѕС‚РґРµР»Р°' });
             }
         }
 
@@ -104,27 +104,27 @@ router.post('/', isAuthenticated, isManagerOrAdmin, async (req, res) => {
     }
 });
 
-// Обновление сотрудника
+// РћР±РЅРѕРІР»РµРЅРёРµ СЃРѕС‚СЂСѓРґРЅРёРєР°
 router.put('/:id', isAuthenticated, isManagerOrAdmin, async (req, res) => {
     try {
         const employee = await Employee.findByPk(req.params.id, {
             include: [{ model: Brigade, include: [Department] }]
         });
-        if (!employee) return res.status(404).json({ error: 'Сотрудник не найден' });
+        if (!employee) return res.status(404).json({ error: 'РЎРѕС‚СЂСѓРґРЅРёРє РЅРµ РЅР°Р№РґРµРЅ' });
 
-        if (req.user.roleName === 'Руководитель отдела') {
+        if (req.user.roleName === 'Р СѓРєРѕРІРѕРґРёС‚РµР»СЊ РѕС‚РґРµР»Р°') {
             const manager = await Employee.findByPk(req.user.id, {
                 include: [{ model: Brigade, include: [Department] }]
             });
             const managerDeptId = manager.Brigade?.Department?.id;
             const employeeDeptId = employee.Brigade?.Department?.id;
             if (!managerDeptId || employeeDeptId !== managerDeptId) {
-                return res.status(403).json({ error: 'Нельзя редактировать сотрудника из другого отдела' });
+                return res.status(403).json({ error: 'РќРµР»СЊР·СЏ СЂРµРґР°РєС‚РёСЂРѕРІР°С‚СЊ СЃРѕС‚СЂСѓРґРЅРёРєР° РёР· РґСЂСѓРіРѕРіРѕ РѕС‚РґРµР»Р°' });
             }
             if (req.body.brigadeId && req.body.brigadeId !== employee.brigadeId) {
                 const newBrigade = await Brigade.findByPk(req.body.brigadeId, { include: [Department] });
                 if (!newBrigade || newBrigade.Department.id !== managerDeptId) {
-                    return res.status(403).json({ error: 'Нельзя переводить сотрудника в бригаду другого отдела' });
+                    return res.status(403).json({ error: 'РќРµР»СЊР·СЏ РїРµСЂРµРІРѕРґРёС‚СЊ СЃРѕС‚СЂСѓРґРЅРёРєР° РІ Р±СЂРёРіР°РґСѓ РґСЂСѓРіРѕРіРѕ РѕС‚РґРµР»Р°' });
                 }
             }
         }
@@ -136,19 +136,19 @@ router.put('/:id', isAuthenticated, isManagerOrAdmin, async (req, res) => {
     }
 });
 
-// Удаление сотрудника
+// РЈРґР°Р»РµРЅРёРµ СЃРѕС‚СЂСѓРґРЅРёРєР°
 router.delete('/:id', isAuthenticated, isAdmin, async (req, res) => {
     try {
         const employee = await Employee.findByPk(req.params.id);
-        if (!employee) return res.status(404).json({ error: 'Сотрудник не найден' });
+        if (!employee) return res.status(404).json({ error: 'РЎРѕС‚СЂСѓРґРЅРёРє РЅРµ РЅР°Р№РґРµРЅ' });
 
         const userData = await UserData.findOne({ where: { employeeId: employee.id } });
         if (userData) {
-            return res.status(400).json({ error: 'У сотрудника есть учётная запись, сначала удалите её' });
+            return res.status(400).json({ error: 'РЈ СЃРѕС‚СЂСѓРґРЅРёРєР° РµСЃС‚СЊ СѓС‡С‘С‚РЅР°СЏ Р·Р°РїРёСЃСЊ, СЃРЅР°С‡Р°Р»Р° СѓРґР°Р»РёС‚Рµ РµС‘' });
         }
 
         await employee.destroy();
-        res.json({ message: 'Сотрудник удалён' });
+        res.json({ message: 'РЎРѕС‚СЂСѓРґРЅРёРє СѓРґР°Р»С‘РЅ' });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

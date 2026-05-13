@@ -1,15 +1,24 @@
-const router = require('express').Router();
+п»їconst router = require('express').Router();
 const { Brigade, Department, BrigadeType, Employee } = require('../models');
 const { isAuthenticated, isAdmin } = require('../middleware/auth');
 
 router.get('/', isAuthenticated, async (req, res) => {
-    const brigades = await Brigade.findAll({ include: [Department, BrigadeType, Employee] });
+    let where = {};
+    if (req.user.roleName === 'Р СѓРєРѕРІРѕРґРёС‚РµР»СЊ РѕС‚РґРµР»Р°') {
+        const manager = await Employee.findByPk(req.user.id, { include: { model: Brigade, include: [Department] } });
+        if (manager && manager.Brigade && manager.Brigade.Department) {
+            where.departmentId = manager.Brigade.Department.id;
+        } else {
+            return res.json([]);
+        }
+    }
+    const brigades = await Brigade.findAll({ where, include: [Department, BrigadeType] });
     res.json(brigades);
 });
 
 router.get('/:id', isAuthenticated, async (req, res) => {
     const brigade = await Brigade.findByPk(req.params.id, { include: [Department, BrigadeType, Employee] });
-    if (!brigade) return res.status(404).json({ error: 'Бригада не найдена' });
+    if (!brigade) return res.status(404).json({ error: 'Р‘СЂРёРіР°РґР° РЅРµ РЅР°Р№РґРµРЅР°' });
     res.json(brigade);
 });
 
@@ -21,18 +30,18 @@ router.post('/', isAuthenticated, isAdmin, async (req, res) => {
 
 router.put('/:id', isAuthenticated, isAdmin, async (req, res) => {
     const brigade = await Brigade.findByPk(req.params.id);
-    if (!brigade) return res.status(404).json({ error: 'Бригада не найдена' });
+    if (!brigade) return res.status(404).json({ error: 'Р‘СЂРёРіР°РґР° РЅРµ РЅР°Р№РґРµРЅР°' });
     await brigade.update(req.body);
     res.json(brigade);
 });
 
 router.delete('/:id', isAuthenticated, isAdmin, async (req, res) => {
     const brigade = await Brigade.findByPk(req.params.id);
-    if (!brigade) return res.status(404).json({ error: 'Бригада не найдена' });
+    if (!brigade) return res.status(404).json({ error: 'Р‘СЂРёРіР°РґР° РЅРµ РЅР°Р№РґРµРЅР°' });
     const employees = await Employee.count({ where: { brigadeId: brigade.id } });
-    if (employees > 0) return res.status(400).json({ error: 'В бригаде есть сотрудники, сначала удалите их' });
+    if (employees > 0) return res.status(400).json({ error: 'Р’ Р±СЂРёРіР°РґРµ РµСЃС‚СЊ СЃРѕС‚СЂСѓРґРЅРёРєРё, СЃРЅР°С‡Р°Р»Р° СѓРґР°Р»РёС‚Рµ РёС…' });
     await brigade.destroy();
-    res.json({ message: 'Бригада удалена' });
+    res.json({ message: 'Р‘СЂРёРіР°РґР° СѓРґР°Р»РµРЅР°' });
 });
 
 module.exports = router;

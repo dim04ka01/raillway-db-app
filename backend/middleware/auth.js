@@ -1,17 +1,20 @@
-const jwt = require('jsonwebtoken');
-const { UserData, Employee } = require('../models');
+п»їconst jwt = require('jsonwebtoken');
+const { UserData, Employee, Role } = require('../models');
 
-// Проверка наличия и валидности JWT
+// РџСЂРѕРІРµСЂРєР° РЅР°Р»РёС‡РёСЏ Рё РІР°Р»РёРґРЅРѕСЃС‚Рё JWT
 const isAuthenticated = async (req, res, next) => {
     const token = req.headers.authorization?.split(' ')[1];
-    if (!token) return res.status(401).json({ error: 'Не авторизован' });
+    if (!token) return res.status(401).json({ error: 'РќРµ Р°РІС‚РѕСЂРёР·РѕРІР°РЅ' });
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const userData = await UserData.findByPk(decoded.employeeId, {
-            include: [{ model: Employee, as: 'Employee' }]
+            include: [
+                { model: Employee },
+                { model: Role }
+            ]
         });
-        if (!userData) return res.status(401).json({ error: 'Пользователь не найден' });
+        if (!userData) return res.status(401).json({ error: 'РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ РЅРµ РЅР°Р№РґРµРЅ' });
         req.user = {
             id: userData.employeeId,
             login: userData.login,
@@ -23,22 +26,22 @@ const isAuthenticated = async (req, res, next) => {
         }
         next();
     } catch (err) {
-        res.status(401).json({ error: 'Неверный токен' });
+        res.status(401).json({ error: 'РќРµРІРµСЂРЅС‹Р№ С‚РѕРєРµРЅ' });
     }
 };
 
-// Проверка роли "admin"
+// РџСЂРѕРІРµСЂРєР° СЂРѕР»Рё "admin"
 const isAdmin = (req, res, next) => {
-    if (req.user.roleName !== 'Администрация') {
-        return res.status(403).json({ error: 'Доступ запрещён' });
+    if (req.user.roleName !== 'РђРґРјРёРЅРёСЃС‚СЂР°С†РёСЏ') {
+        return res.status(403).json({ error: 'Р”РѕСЃС‚СѓРї Р·Р°РїСЂРµС‰С‘РЅ' });
     }
     next();
 };
 
-// Проверка роли "admin" или "manager"
+// РџСЂРѕРІРµСЂРєР° СЂРѕР»Рё "admin" РёР»Рё "manager"
 const isManagerOrAdmin = (req, res, next) => {
-    if (req.user.roleName !== 'Администрация' && req.user.roleName !== 'Руководитель отдела') {
-        return res.status(403).json({ error: 'Доступ запрещён' });
+    if (req.user.roleName !== 'РђРґРјРёРЅРёСЃС‚СЂР°С†РёСЏ' && req.user.roleName !== 'Р СѓРєРѕРІРѕРґРёС‚РµР»СЊ РѕС‚РґРµР»Р°') {
+        return res.status(403).json({ error: 'Р”РѕСЃС‚СѓРї Р·Р°РїСЂРµС‰С‘РЅ' });
     }
     next();
 };
