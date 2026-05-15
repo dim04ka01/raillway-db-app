@@ -1,4 +1,4 @@
-﻿import { Outlet, Link, useNavigate } from 'react-router-dom';
+﻿import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 
 function Layout() {
     const navigate = useNavigate();
@@ -14,6 +14,7 @@ function Layout() {
 
     const menuItems = [
         // Все имеют доступ
+        { path: '/profile', label: 'Мой профиль', roles: ['Администрация', 'Руководитель отдела', 'Сотрудник'] },
         { path: '/wagon-maintenance', label: 'Обслуживание вагонов', roles: ['Администрация', 'Руководитель отдела', 'Сотрудник'] },
         { path: '/locomotive-maintenance', label: 'Обслуживание локомотивов', roles: ['Администрация', 'Руководитель отдела', 'Сотрудник'] },
         { path: '/wagons', label: 'Вагоны', roles: ['Администрация', 'Руководитель отдела', 'Сотрудник'] },
@@ -44,7 +45,12 @@ function Layout() {
                     <ul>
                         {visibleMenu.map(item => (
                             <li key={item.path}>
-                                <Link to={item.path}>{item.label}</Link>
+                                <NavLink
+                                    to={item.path}
+                                    className={({ isActive }) => isActive ? 'active-link' : ''}
+                                >
+                                    {item.label}
+                                </NavLink>
                             </li>
                         ))}
                     </ul>

@@ -111,7 +111,7 @@ function BrigadeTypes() {
 
     return (
         <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="flex-between mb-20">
                 <h1>Типы бригад</h1>
                 {isAdmin && <button className="btn btn-primary" onClick={openCreateModal}>Добавить тип</button>}
             </div>

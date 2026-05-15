@@ -111,7 +111,7 @@ function Roles() {
 
     return (
         <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="flex-between mb-20">
                 <h1>Роли в системе</h1>
                 {isAdmin && <button className="btn btn-primary" onClick={openCreateModal}>Добавить роль</button>}
             </div>

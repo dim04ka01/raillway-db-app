@@ -77,7 +77,6 @@ async function startServer() {
         // Запуск Express-сервера
         app.listen(PORT, () => {
             console.log(`Сервер запущен на порту ${PORT}`);
-            console.log(`http://localhost:${PORT}/api/ping – тестовый маршрут (если есть)`);
         });
     } catch (error) {
         console.error('Ошибка при запуске сервера:', error.message);

@@ -15,7 +15,7 @@ function Brigades() {
     const [sortDirection, setSortDirection] = useState('asc');
     const userRole = localStorage.getItem('userRole');
     const token = localStorage.getItem('token');
-    const isAdmin = userRole === 'Администрация';
+    const isAdminOrManager = userRole === 'Администрация' || userRole === 'Руководитель отдела';
 
     const fetchData = useCallback(async () => {
         try {
@@ -133,9 +133,9 @@ function Brigades() {
 
     return (
         <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="flex-between mb-20">
                 <h1>Бригады</h1>
-                {isAdmin && <button className="btn btn-primary" onClick={openCreateModal}>Добавить бригаду</button>}
+                {isAdminOrManager && <button className="btn btn-primary" onClick={openCreateModal}>Добавить бригаду</button>}
             </div>
             <table className="data-table">
                 <thead>
@@ -144,7 +144,7 @@ function Brigades() {
                         <th onClick={() => handleSort('name')}>Название <span className="sort-indicator">{getSortIndicator('name')}</span></th>
                         <th onClick={() => handleSort('department')}>Отдел <span className="sort-indicator">{getSortIndicator('department')}</span></th>
                         <th onClick={() => handleSort('brigadeType')}>Тип бригады <span className="sort-indicator">{getSortIndicator('brigadeType')}</span></th>
-                        {isAdmin && <th>Действия</th>}
+                        {isAdminOrManager && <th>Действия</th>}
                     </tr>
                 </thead>
                 <tbody>
@@ -154,7 +154,7 @@ function Brigades() {
                             <td>{brigade.name}</td>
                             <td>{brigade.Department?.name}</td>
                             <td>{brigade.BrigadeType?.name}</td>
-                            {isAdmin && (
+                            {isAdminOrManager && (
                                 <td>
                                     <button onClick={() => openEditModal(brigade)} className="btn-edit">✏️</button>
                                     <button onClick={() => handleDelete(brigade.id)} className="btn-delete">🗑️</button>

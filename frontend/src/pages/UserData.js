@@ -143,7 +143,7 @@ function UserData() {
 
     return (
         <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="flex-between mb-20">
                 <h1>Учётные записи пользователей</h1>
                 <button className="btn btn-primary" onClick={openCreateModal}>Создать учётную запись</button>
             </div>

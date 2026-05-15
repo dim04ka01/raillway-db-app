@@ -1,7 +1,7 @@
 ﻿import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './components/Login';
 import Layout from './components/Layout';
-import Dashboard from './pages/Dashboard';
+import Profile from './pages/Profile';
 import Employees from './pages/Employees';
 import Departments from './pages/Departments';
 import BrigadeTypes from './pages/BrigadeTypes';
@@ -30,8 +30,8 @@ function App() {
             <Routes>
                 <Route path="/login" element={<Login />} />
                 <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
-                    <Route index element={<Navigate to="/dashboard" />} />
-                    <Route path="dashboard" element={<Dashboard />} />
+                    <Route index element={<Navigate to="/profile" />} />
+                    <Route path="profile" element={<Profile />} />
                     <Route path="employees" element={<Employees />} />
                     <Route path="departments" element={<Departments />} />
                     <Route path="brigade-types" element={<BrigadeTypes />} />

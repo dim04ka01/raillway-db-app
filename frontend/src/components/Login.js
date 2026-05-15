@@ -14,10 +14,11 @@ function Login() {
         try {
             const response = await axios.post('/api/auth/login', { login, password });
             localStorage.setItem('token', response.data.token);
+            localStorage.setItem('employeeId', response.data.user.employee.id);
             localStorage.setItem('userRole', response.data.user.role);
             localStorage.setItem('userName',
                 response.data.user.employee ? `${response.data.user.employee.lastName} ${response.data.user.employee.firstName}` : login);
-            navigate('/dashboard');
+            navigate('/profile');
         } catch (err) {
             setError(err.response?.data?.error || 'Ошибка входа');
         }

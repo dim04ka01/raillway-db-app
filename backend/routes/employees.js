@@ -105,32 +105,52 @@ router.post('/', isAuthenticated, isManagerOrAdmin, async (req, res) => {
 });
 
 // Обновление сотрудника
-router.put('/:id', isAuthenticated, isManagerOrAdmin, async (req, res) => {
+router.put('/:id', isAuthenticated, async (req, res) => {
     try {
         const employee = await Employee.findByPk(req.params.id, {
             include: [{ model: Brigade, include: [Department] }]
         });
         if (!employee) return res.status(404).json({ error: 'Сотрудник не найден' });
 
-        if (req.user.roleName === 'Руководитель отдела') {
+        const isAdmin = req.user.roleName === 'Администрация';
+        const isManager = req.user.roleName === 'Руководитель отдела';
+        const isSelf = parseInt(req.params.id) === req.user.id;
+
+        // Администратор может обновлять любые поля
+        if (isAdmin) {
+            await employee.update(req.body);
+            return res.json(employee);
+        }
+
+        // Руководитель отдела – только своих сотрудников
+        if (isManager) {
             const manager = await Employee.findByPk(req.user.id, {
                 include: [{ model: Brigade, include: [Department] }]
             });
             const managerDeptId = manager.Brigade?.Department?.id;
             const employeeDeptId = employee.Brigade?.Department?.id;
-            if (!managerDeptId || employeeDeptId !== managerDeptId) {
+            if (managerDeptId && employeeDeptId === managerDeptId) {
+                await employee.update(req.body);
+                return res.json(employee);
+            } else {
                 return res.status(403).json({ error: 'Нельзя редактировать сотрудника из другого отдела' });
-            }
-            if (req.body.brigadeId && req.body.brigadeId !== employee.brigadeId) {
-                const newBrigade = await Brigade.findByPk(req.body.brigadeId, { include: [Department] });
-                if (!newBrigade || newBrigade.Department.id !== managerDeptId) {
-                    return res.status(403).json({ error: 'Нельзя переводить сотрудника в бригаду другого отдела' });
-                }
             }
         }
 
-        await employee.update(req.body);
-        res.json(employee);
+        // Сам сотрудник может обновлять только свои данные
+        if (isSelf) {
+            const allowedFields = ['phone', 'email', 'lastName', 'firstName', 'middleName', 'birthDate'];
+            const updateData = {};
+            for (const field of allowedFields) {
+                if (req.body[field] !== undefined) {
+                    updateData[field] = req.body[field];
+                }
+            }
+            await employee.update(updateData);
+            return res.json(employee);
+        }
+
+        return res.status(403).json({ error: 'Доступ запрещён' });
     } catch (error) {
         res.status(400).json({ error: error.message });
     }

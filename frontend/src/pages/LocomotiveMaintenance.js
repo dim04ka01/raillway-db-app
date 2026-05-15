@@ -144,16 +144,16 @@ function LocomotiveMaintenance() {
 
     return (
         <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <div className="flex-between mb-20">
                 <h1>История обслуживания локомотивов</h1>
                 <button className="btn btn-primary" onClick={openCreateModal}>Добавить запись</button>
             </div>
 
-            <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <div className="filter-bar">
                 <label>Фильтр по локомотиву:</label>
                 <select
                     className="form-input"
-                    style={{ width: '300px' }}
+                    style={{ width: '400px' }}
                     value={selectedLocomotiveId}
                     onChange={(e) => setSelectedLocomotiveId(e.target.value)}
                 >
@@ -165,7 +165,7 @@ function LocomotiveMaintenance() {
                     ))}
                 </select>
                 {selectedLocomotiveId && (
-                    <button className="btn" onClick={() => setSelectedLocomotiveId('')}>Сбросить</button>
+                    <button className="btn btn-primary" onClick={() => setSelectedLocomotiveId('')}>Сбросить</button>
                 )}
             </div>
 
@@ -177,7 +177,7 @@ function LocomotiveMaintenance() {
                         <th onClick={() => handleSort('employee')}>Сотрудник <span className="sort-indicator">{getSortIndicator('employee')}</span></th>
                         <th onClick={() => handleSort('date')}>Дата <span className="sort-indicator">{getSortIndicator('date')}</span></th>
                         <th onClick={() => handleSort('description')}>Описание <span className="sort-indicator">{getSortIndicator('description')}</span></th>
-                        <th>Действия</th>
+                        {isAdmin && <th>Действия</th>}
                     </tr>
                 </thead>
                 <tbody>
@@ -188,10 +188,12 @@ function LocomotiveMaintenance() {
                             <td>{record.Employee ? `${record.Employee.lastName} ${record.Employee.firstName}` : `ID ${record.employeeId}`}</td>
                             <td>{record.date}</td>
                             <td>{record.description}</td>
-                            <td>
-                                <button onClick={() => openEditModal(record)} className="btn-edit">✏️</button>
-                                {isAdmin && <button onClick={() => handleDelete(record.id)} className="btn-delete">🗑️</button>}
-                            </td>
+                            {isAdmin && (
+                                <td>
+                                    <button onClick={() => openEditModal(record)} className="btn-edit">✏️</button>
+                                    <button onClick={() => handleDelete(record.id)} className="btn-delete">🗑️</button>
+                                </td>
+                            )}
                         </tr>
                     ))}
                     {sortedRecords.length === 0 && (
