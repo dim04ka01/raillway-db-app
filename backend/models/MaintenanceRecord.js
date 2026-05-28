@@ -1,12 +1,12 @@
 ﻿const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
-const WagonMaintenanceRecord = sequelize.define('WagonMaintenanceRecord', {
+const MaintenanceRecord = sequelize.define('MaintenanceRecord', {
     id: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
         primaryKey: true,
-        field: 'ID_Записи_о_вагоне'
+        field: 'ID_Записи'
     },
     employeeId: {
         type: DataTypes.INTEGER,
@@ -14,11 +14,11 @@ const WagonMaintenanceRecord = sequelize.define('WagonMaintenanceRecord', {
         field: 'ID_Сотрудника',
         references: { model: 'Сотрудники', key: 'ID_Сотрудника' }
     },
-    wagonId: {
+    transportId: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        field: 'ID_Вагона',
-        references: { model: 'Вагоны', key: 'ID_Вагона' }
+        field: 'ID_ТС',
+        references: { model: 'Транспортное_средство', key: 'ID_ТС' }
     },
     date: {
         type: DataTypes.DATEONLY,
@@ -27,12 +27,11 @@ const WagonMaintenanceRecord = sequelize.define('WagonMaintenanceRecord', {
     },
     description: {
         type: DataTypes.TEXT,
-        allowNull: true,
         field: 'Описание'
     }
 }, {
-    tableName: 'История_обслуживания_вагонов',
+    tableName: 'История_обслуживания',
     timestamps: false
 });
 
-module.exports = WagonMaintenanceRecord;
+module.exports = MaintenanceRecord;

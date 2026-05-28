@@ -12,10 +12,9 @@ import UserData from './pages/UserData';
 import WagonTypes from './pages/WagonTypes';
 import WagonModels from './pages/WagonModels';
 import Wagons from './pages/Wagons';
-import WagonMaintenance from './pages/WagonMaintenance';
 import LocomotiveModels from './pages/LocomotiveModels';
 import Locomotives from './pages/Locomotives';
-import LocomotiveMaintenance from './pages/LocomotiveMaintenance';
+import Maintenance from './pages/Maintenance';
 import Reports from './pages/Reports';
 import './global.css';
 
@@ -42,10 +41,9 @@ function App() {
                     <Route path="wagon-types" element={<WagonTypes />} />
                     <Route path="wagon-models" element={<WagonModels />} />
                     <Route path="wagons" element={<Wagons />} />
-                    <Route path="wagon-maintenance" element={<WagonMaintenance />} />
                     <Route path="locomotive-models" element={<LocomotiveModels />} />
                     <Route path="locomotives" element={<Locomotives />} />
-                    <Route path="locomotive-maintenance" element={<LocomotiveMaintenance />} />
+                    <Route path="maintenance" element={<Maintenance />} />
                     <Route path="reports" element={<Reports />} />
                 </Route>
             </Routes>

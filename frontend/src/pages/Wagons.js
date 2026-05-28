@@ -175,6 +175,10 @@ function Wagons() {
                         <h2>{editingWagon ? 'Редактировать вагон' : 'Добавить вагон'}</h2>
                         <form onSubmit={handleSubmit}>
                             <div className="form-group">
+                                <label>ID*</label>
+                                <input type="number" name="id" className="form-input" value={formData.id} onChange={handleFormChange} required />
+                            </div>
+                            <div className="form-group">
                                 <label>Тип вагона*</label>
                                 <select name="wagonTypeId" className="form-input" value={formData.wagonTypeId} onChange={handleFormChange} required>
                                     <option value="">Выберите тип</option>

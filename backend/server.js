@@ -10,21 +10,35 @@ app.use(cors());
 app.use(express.json());
 
 // Подключение маршрутов
+// Аутентификация 
 app.use('/api/auth', require('./routes/auth'));
+
+// Основные справочники
+app.use('/api/employees', require('./routes/employees'));
 app.use('/api/departments', require('./routes/departments'));
 app.use('/api/brigades', require('./routes/brigades'));
 app.use('/api/brigade-types', require('./routes/brigadeTypes'));
 app.use('/api/positions', require('./routes/positions'));
 app.use('/api/roles', require('./routes/roles'));
 app.use('/api/user-data', require('./routes/userData'));
-app.use('/api/employees', require('./routes/employees'));
+
+// Модели локомотивов и вагонов
 app.use('/api/locomotive-models', require('./routes/locomotiveModels'));
-app.use('/api/locomotives', require('./routes/locomotives'));
-app.use('/api/locomotive-maintenance', require('./routes/locomotiveMaintenance'));
 app.use('/api/wagon-types', require('./routes/wagonTypes'));
 app.use('/api/wagon-models', require('./routes/wagonModels'));
+
+// Транспортные средства (общие)
+app.use('/api/transport', require('./routes/transport'));
+app.use('/api/locomotives', require('./routes/locomotives'));
 app.use('/api/wagons', require('./routes/wagons'));
-app.use('/api/wagon-maintenance', require('./routes/wagonMaintenance'));
+
+// История обслуживания
+app.use('/api/maintenance', require('./routes/maintenance'));
+
+// Заявки на техосмотр
+app.use('/api/maintenance-requests', require('./routes/maintenanceRequests'));
+
+// Отчёты
 app.use('/api/reports', require('./routes/reports'));
 
 // Функция инициализации базовых данных 

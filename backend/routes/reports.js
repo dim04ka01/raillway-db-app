@@ -3,9 +3,9 @@ const ExcelJS = require('exceljs');
 const { Op } = require('sequelize');
 const {
     Employee, Brigade, Position, Department,
-    Locomotive, LocomotiveModel,
+    Transport, Locomotive, LocomotiveModel,
     Wagon, WagonType, WagonModel,
-    LocomotiveMaintenanceRecord, WagonMaintenanceRecord
+    MaintenanceRecord
 } = require('../models');
 const { isAuthenticated, isAdmin } = require('../middleware/auth');
 
@@ -36,69 +36,63 @@ router.post('/generate', isAuthenticated, isAdmin, async (req, res) => {
             const employees = await Employee.findAll({
                 where,
                 include: [
-                    { model: Brigade, include: [Department] }, // Вложенный include
+                    { model: Brigade, include: [Department] },
                     Position
                 ],
                 order: [['id', 'ASC']]
             });
             headers = ['ID', 'Фамилия', 'Имя', 'Отчество', 'Должность', 'Бригада', 'Отдел', 'Телефон', 'Email'];
             rows = employees.map(emp => [
-                emp.id,
-                emp.lastName,
-                emp.firstName,
-                emp.middleName || '',
-                emp.Position?.name || '',
-                emp.Brigade?.name || '',
-                emp.Brigade?.Department?.name || '', // Доступ к отделу через бригаду
-                emp.phone || '',
-                emp.email || ''
+                emp.id, emp.lastName, emp.firstName, emp.middleName || '',
+                emp.Position?.name || '', emp.Brigade?.name || '', emp.Brigade?.Department?.name || '',
+                emp.phone || '', emp.email || ''
             ]);
             title = 'Сотрудники';
         }
         else if (reportType === 'rollingStock') {
-            const locomotives = await Locomotive.findAll({ include: [LocomotiveModel] });
-            const wagons = await Wagon.findAll({ include: [WagonType, WagonModel] });
+            // Объединяем локомотивы и вагоны через Transport
+            const transports = await Transport.findAll({
+                include: [
+                    { model: Locomotive, include: [LocomotiveModel] },
+                    { model: Wagon, include: [WagonType, WagonModel] }
+                ]
+            });
             headers = ['Тип', 'ID', 'Модель', 'Тип/Модель', 'Дата производства'];
             rows = [];
-            locomotives.forEach(loco => {
-                rows.push(['Локомотив', loco.id, loco.LocomotiveModel?.name || '', '', loco.productionDate || '']);
-            });
-            wagons.forEach(wagon => {
-                rows.push(['Вагон', wagon.id, wagon.WagonModel?.name || '', wagon.WagonType?.name || '', wagon.productionDate || '']);
+            transports.forEach(ts => {
+                if (ts.Locomotive) {
+                    rows.push(['Локомотив', ts.id, ts.Locomotive.LocomotiveModel?.name || '', '', ts.productionDate || '']);
+                } else if (ts.Wagon) {
+                    rows.push(['Вагон', ts.id, ts.Wagon.WagonModel?.name || '', ts.Wagon.WagonType?.name || '', ts.productionDate || '']);
+                }
             });
             title = 'Подвижной состав';
         }
         else if (reportType === 'maintenance') {
-            const locoRecords = await LocomotiveMaintenanceRecord.findAll({
+            const records = await MaintenanceRecord.findAll({
                 where: dateFilter,
-                include: [Locomotive, Employee],
+                include: [
+                    { model: Transport },
+                    { model: Employee, attributes: ['id', 'lastName', 'firstName'] }
+                ],
                 order: [['date', 'DESC']]
             });
-            const wagonRecords = await WagonMaintenanceRecord.findAll({
-                where: dateFilter,
-                include: [Wagon, Employee],
-                order: [['date', 'DESC']]
-            });
-            headers = ['Тип техники', 'ID техники', 'Дата', 'Сотрудник', 'Описание'];
+            headers = ['ID ТС', 'Тип', 'Дата', 'Сотрудник', 'Описание'];
             rows = [];
-            locoRecords.forEach(rec => {
+            for (const rec of records) {
+                let type = 'Неизвестно';
+                const loco = await Locomotive.findByPk(rec.transportId);
+                if (loco) type = 'Локомотив';
+                else {
+                    const wagon = await Wagon.findByPk(rec.transportId);
+                    if (wagon) type = 'Вагон';
+                }
                 rows.push([
-                    'Локомотив',
-                    rec.locomotiveId,
-                    rec.date,
+                    rec.transportId, type, rec.date,
                     rec.Employee ? `${rec.Employee.lastName} ${rec.Employee.firstName}` : `ID ${rec.employeeId}`,
                     rec.description || ''
                 ]);
-            });
-            wagonRecords.forEach(rec => {
-                rows.push([
-                    'Вагон',
-                    rec.wagonId,
-                    rec.date,
-                    rec.Employee ? `${rec.Employee.lastName} ${rec.Employee.firstName}` : `ID ${rec.employeeId}`,
-                    rec.description || ''
-                ]);
-            });
+            }
             title = 'История обслуживания';
         }
 

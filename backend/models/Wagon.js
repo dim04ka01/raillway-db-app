@@ -2,11 +2,11 @@
 const sequelize = require('../config/db');
 
 const Wagon = sequelize.define('Wagon', {
-    id: {
+    transportId: {
         type: DataTypes.INTEGER,
-        autoIncrement: true,
         primaryKey: true,
-        field: 'ID_Вагона'
+        field: 'ID_ТС',
+        references: { model: 'Транспортное_средство', key: 'ID_ТС' }
     },
     wagonTypeId: {
         type: DataTypes.INTEGER,
@@ -19,14 +19,10 @@ const Wagon = sequelize.define('Wagon', {
         allowNull: false,
         field: 'ID_Модели_вагона',
         references: { model: 'Модели_вагонов', key: 'ID_Модели_вагона' }
-    },
-    productionDate: {
-        type: DataTypes.DATEONLY,
-        field: 'Дата_производства'
     }
 }, {
     tableName: 'Вагоны',
     timestamps: false
 });
 
-module.exports = Wagon;
+module.exports = Wagon; 

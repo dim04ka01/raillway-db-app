@@ -165,6 +165,10 @@ function Locomotives() {
                         <h2>{editingLocomotive ? 'Редактировать локомотив' : 'Добавить локомотив'}</h2>
                         <form onSubmit={handleSubmit}>
                             <div className="form-group">
+                                <label>ID*</label>
+                                <input type="number" name="id" className="form-input" value={formData.id} onChange={handleFormChange} required />
+                            </div>
+                            <div className="form-group">
                                 <label>Модель*</label>
                                 <select name="modelId" className="form-input" value={formData.modelId} onChange={handleFormChange} required>
                                     <option value="">Выберите модель</option>

@@ -8,13 +8,14 @@ const Position = require('./Position');
 const Role = require('./Role');
 const UserData = require('./UserData');
 const Employee = require('./Employee');
+const Transport = require('./Transport');
 const LocomotiveModel = require('./LocomotiveModel');
 const Locomotive = require('./Locomotive');
-const LocomotiveMaintenanceRecord = require('./LocomotiveMaintenanceRecord');
 const WagonType = require('./WagonType');
 const WagonModel = require('./WagonModel');
 const Wagon = require('./Wagon');
-const WagonMaintenanceRecord = require('./WagonMaintenanceRecord');
+const MaintenanceRecord = require('./MaintenanceRecord');
+const MaintenanceRequest = require('./MaintenanceRequest');
 
 // Связи
 // Отделы - Бригады
@@ -41,49 +42,58 @@ Employee.belongsTo(Brigade, { foreignKey: 'ID_Бригады' });
 Position.hasMany(Employee, { foreignKey: 'ID_Должности' });
 Employee.belongsTo(Position, { foreignKey: 'ID_Должности' });
 
-// Локомотив - Модель локомотива
-LocomotiveModel.hasMany(Locomotive, { foreignKey: 'ID_Модели_локомотива' });
-Locomotive.belongsTo(LocomotiveModel, { foreignKey: 'ID_Модели_локомотива' });
+// Транспортное средство - Локомотив
+Transport.hasOne(Locomotive, { foreignKey: 'transportId' });
+Locomotive.belongsTo(Transport, { foreignKey: 'transportId' });
 
-// Вагон - Модель вагона
-WagonModel.hasMany(Wagon, { foreignKey: 'ID_Модели_вагона' });
-Wagon.belongsTo(WagonModel, { foreignKey: 'ID_Модели_вагона' });
+// Транспортное средство - Вагон
+Transport.hasOne(Wagon, { foreignKey: 'transportId' });
+Wagon.belongsTo(Transport, { foreignKey: 'transportId' });
 
-// Вагон - Тип вагона
-WagonType.hasMany(Wagon, { foreignKey: 'ID_Типа_вагона' });
-Wagon.belongsTo(WagonType, { foreignKey: 'ID_Типа_вагона' });
+// Модель локомотива - Локомотив
+LocomotiveModel.hasMany(Locomotive, { foreignKey: 'modelId' });
+Locomotive.belongsTo(LocomotiveModel, { foreignKey: 'modelId' });
 
-// Локомотив - История обслуживания локомотива
-Locomotive.hasMany(LocomotiveMaintenanceRecord, { foreignKey: 'locomotiveId' });
-LocomotiveMaintenanceRecord.belongsTo(Locomotive, { foreignKey: 'locomotiveId' });
+// Тип вагона - Вагон
+WagonType.hasMany(Wagon, { foreignKey: 'wagonTypeId' });
+Wagon.belongsTo(WagonType, { foreignKey: 'wagonTypeId' });
 
-// Вагон - История обслуживания вагона
-Wagon.hasMany(WagonMaintenanceRecord, { foreignKey: 'wagonId' });
-WagonMaintenanceRecord.belongsTo(Wagon, { foreignKey: 'wagonId' });
+// Модель вагона - Вагон
+WagonModel.hasMany(Wagon, { foreignKey: 'modelId' });
+Wagon.belongsTo(WagonModel, { foreignKey: 'modelId' });
 
-// Сотрудник - История обслуживания локомотива
-Employee.hasMany(LocomotiveMaintenanceRecord, { foreignKey: 'employeeId' });
-LocomotiveMaintenanceRecord.belongsTo(Employee, { foreignKey: 'employeeId' });
+// История обслуживания - Транспортное средство
+MaintenanceRecord.belongsTo(Transport, { foreignKey: 'transportId' });
+Transport.hasMany(MaintenanceRecord, { foreignKey: 'transportId' });
 
-// Сотрудник - История обслуживания вагона
-Employee.hasMany(WagonMaintenanceRecord, { foreignKey: 'employeeId' });
-WagonMaintenanceRecord.belongsTo(Employee, { foreignKey: 'employeeId' });
+// История обслуживания - Сотрудник
+MaintenanceRecord.belongsTo(Employee, { foreignKey: 'employeeId' });
+Employee.hasMany(MaintenanceRecord, { foreignKey: 'employeeId' });
+
+// Заявки - Транспортное средство
+MaintenanceRequest.belongsTo(Transport, { foreignKey: 'transportId' });
+Transport.hasMany(MaintenanceRequest, { foreignKey: 'transportId' });
+
+// Заявки - Сотрудник
+MaintenanceRequest.belongsTo(Employee, { foreignKey: 'managerId' });
+Employee.hasMany(MaintenanceRequest, { foreignKey: 'managerId' });
 
 // Экспортируем всё
 module.exports = {
     sequelize,
+    Employee,
     Department,
-    BrigadeType,
     Brigade,
+    BrigadeType,
     Position,
     Role,
     UserData,
-    Employee,
+    Transport,
     LocomotiveModel,
     Locomotive,
-    LocomotiveMaintenanceRecord,
     WagonType,
     WagonModel,
     Wagon,
-    WagonMaintenanceRecord
+    MaintenanceRecord,
+    MaintenanceRequest
 };
