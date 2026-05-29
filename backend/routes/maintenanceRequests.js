@@ -12,7 +12,7 @@ async function enrichTransport(transportId) {
             id: transport.id,
             productionDate: transport.productionDate,
             type: 'locomotive',
-            model: loco.LocomotiveModel ? loco.LocomotiveModel.name : null
+            modelName: loco.LocomotiveModel ? loco.LocomotiveModel.name : null
         };
     }
     const wagon = await Wagon.findByPk(transportId, { include: [WagonModel, WagonType] });
@@ -21,7 +21,7 @@ async function enrichTransport(transportId) {
             id: transport.id,
             productionDate: transport.productionDate,
             type: 'wagon',
-            model: wagon.WagonModel ? wagon.WagonModel.name : null,
+            modelName: wagon.WagonModel ? wagon.WagonModel.name : null,
             wagonType: wagon.WagonType ? wagon.WagonType.name : null
         };
     }

@@ -168,15 +168,14 @@ function Maintenance() {
     if (error) return <div className="error">{error}</div>;
 
     // Получить отображаемое название ТС
-    const getTransportLabel = (record) => {
-        const transport = transportList.find(t => t.id === record.transportId);
-        if (!transport) return `ТС #${record.transportId}`;
-        if (transport.type === 'locomotive') {
-            return `Локомотив #${transport.id} (${transport.modelName || 'нет модели'})`;
-        } else if (transport.type === 'wagon') {
-            return `Вагон #${transport.id} (${transport.modelName || 'нет модели'}, тип: ${transport.wagonType || 'не указан'})`;
+    const getTransportLabel = (ts) => {
+        if (!ts) return '—';
+        if (ts.type === 'locomotive') {
+            return `Локомотив #${ts.id} (${ts.modelName || 'нет модели'})`;
+        } else if (ts.type === 'wagon') {
+            return `Вагон #${ts.id} (${ts.modelName || 'нет модели'}, тип: ${ts.wagonType || 'не указан'})`;
         }
-        return `ТС #${transport.id}`;
+        return `ТС #${ts.id}`;
     };
 
     return (
