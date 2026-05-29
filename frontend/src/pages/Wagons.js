@@ -102,6 +102,7 @@ function Wagons() {
     const openEditModal = (wagon) => {
         setEditingWagon(wagon);
         setFormData({
+            id: String(wagon.id),
             wagonTypeId: wagon.wagonTypeId,
             modelId: wagon.modelId,
             productionDate: wagon.productionDate || ''
@@ -176,7 +177,7 @@ function Wagons() {
                         <form onSubmit={handleSubmit}>
                             <div className="form-group">
                                 <label>ID*</label>
-                                <input type="number" name="id" className="form-input" value={formData.id} onChange={handleFormChange} required />
+                                <input type="text" name="id" className="form-input" value={formData.id} onChange={handleFormChange} required={!editingWagon} readOnly={editingWagon ? true : false} />
                             </div>
                             <div className="form-group">
                                 <label>Тип вагона*</label>

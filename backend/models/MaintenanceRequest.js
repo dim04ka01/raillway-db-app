@@ -15,7 +15,7 @@ const MaintenanceRequest = sequelize.define('MaintenanceRequest', {
         references: { model: 'Сотрудники', key: 'ID_Сотрудника' }
     },
     transportId: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.STRING(20),
         allowNull: false,
         field: 'ID_ТС',
         references: { model: 'Транспортное_средство', key: 'ID_ТС' }
@@ -31,8 +31,9 @@ const MaintenanceRequest = sequelize.define('MaintenanceRequest', {
         field: 'Желаемая_дата_выполнения'
     },
     status: {
-        type: DataTypes.STRING(50),
-        defaultValue: 'Новая',
+        type: DataTypes.ENUM('В ожидании', 'Выполнена'),
+        allowNull: false,
+        defaultValue: 'В ожидании',
         field: 'Статус'
     },
     description: {

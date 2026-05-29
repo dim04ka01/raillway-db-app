@@ -52,19 +52,42 @@ router.get('/:id', isAuthenticated, async (req, res) => {
     }
 });
 
-// POST /api/maintenance – создать запись (employeeId подставляется из токена)
+// POST /api/maintenance – создание записи
 router.post('/', isAuthenticated, async (req, res) => {
     try {
-        const { transportId, date, description } = req.body;
-        // Проверяем, существует ли транспорт
+        const { transportId, date, description, requestId } = req.body;
         const transport = await Transport.findByPk(transportId);
         if (!transport) return res.status(404).json({ error: 'Транспортное средство не найдено' });
+
+        // Если указана заявка, проверяем её
+        if (requestId) {
+            const request = await MaintenanceRequest.findByPk(requestId);
+            if (!request) return res.status(404).json({ error: 'Заявка не найдена' });
+            if (request.transportId !== transportId) {
+                return res.status(400).json({ error: 'Заявка не относится к данному транспортному средству' });
+            }
+            if (request.status !== 'В ожидании') {
+                return res.status(400).json({ error: 'Заявка уже выполнена или неактивна' });
+            }
+        }
+
         const record = await MaintenanceRecord.create({
             employeeId: req.user.id,
             transportId,
             date,
-            description
+            description,
+            requestId: requestId || null
         });
+
+        // Если заявка была указана – обновляем её
+        if (requestId) {
+            const request = await MaintenanceRequest.findByPk(requestId);
+            await request.update({
+                status: 'Выполнена',
+                completionDate: date
+            });
+        }
+
         res.status(201).json(record);
     } catch (err) {
         res.status(400).json({ error: err.message });

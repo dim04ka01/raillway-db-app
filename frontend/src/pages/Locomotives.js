@@ -95,6 +95,7 @@ function Locomotives() {
     const openEditModal = (loco) => {
         setEditingLocomotive(loco);
         setFormData({
+            id: String(loco.id),
             modelId: loco.modelId,
             productionDate: loco.productionDate || ''
         });
@@ -166,7 +167,7 @@ function Locomotives() {
                         <form onSubmit={handleSubmit}>
                             <div className="form-group">
                                 <label>ID*</label>
-                                <input type="number" name="id" className="form-input" value={formData.id} onChange={handleFormChange} required />
+                                <input type="text" name="id" className="form-input" value={formData.id} onChange={handleFormChange} required={!editingLocomotive} readOnly={editingLocomotive ? true : false} />
                             </div>
                             <div className="form-group">
                                 <label>Модель*</label>

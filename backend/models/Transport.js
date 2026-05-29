@@ -3,14 +3,10 @@ const sequelize = require('../config/db');
 
 const Transport = sequelize.define('Transport', {
     id: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.STRING(20),
         primaryKey: true,
         allowNull: false,
         field: 'ID_ТС',
-        validate: {
-            isInt: { msg: 'ID должно быть целым числом' },
-            min: 1,
-        }
     },
     productionDate: {
         type: DataTypes.DATEONLY,

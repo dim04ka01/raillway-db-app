@@ -35,7 +35,7 @@ router.get('/', isAuthenticated, async (req, res) => {
         const requests = await MaintenanceRequest.findAll({
             where,
             include: [
-                { model: Employee, as: 'Manager', attributes: ['id', 'lastName', 'firstName'] },
+                { model: Employee, attributes: ['id', 'lastName', 'firstName'] },
                 { model: Transport, attributes: ['id', 'productionDate'] }
             ],
             order: [['createdAt', 'DESC']]
@@ -55,7 +55,7 @@ router.get('/:id', isAuthenticated, async (req, res) => {
     try {
         const request = await MaintenanceRequest.findByPk(req.params.id, {
             include: [
-                { model: Employee, as: 'Manager', attributes: ['id', 'lastName', 'firstName'] },
+                { model: Employee, attributes: ['id', 'lastName', 'firstName'] },
                 { model: Transport, attributes: ['id', 'productionDate'] }
             ]
         });
@@ -65,6 +65,23 @@ router.get('/:id', isAuthenticated, async (req, res) => {
         }
         const transportInfo = await enrichTransport(request.transportId);
         res.json({ ...request.toJSON(), transportInfo });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// GET /api/maintenance-requests/for-transport/:transportId
+router.get('/for-transport/:transportId', isAuthenticated, async (req, res) => {
+    try {
+        const { transportId } = req.params;
+        const requests = await MaintenanceRequest.findAll({
+            where: {
+                transportId: transportId,
+                status: 'В ожидании'
+            },
+            attributes: ['id', 'desiredDate', 'description']
+        });
+        res.json(requests);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -81,7 +98,7 @@ router.post('/', isAuthenticated, isManagerOrAdmin, async (req, res) => {
             transportId,
             desiredDate,
             description,
-            status: 'Новая'
+            status: 'В ожидании'
         });
         res.status(201).json(request);
     } catch (err) {

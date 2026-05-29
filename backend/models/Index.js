@@ -78,6 +78,10 @@ Transport.hasMany(MaintenanceRequest, { foreignKey: 'transportId' });
 MaintenanceRequest.belongsTo(Employee, { foreignKey: 'managerId' });
 Employee.hasMany(MaintenanceRequest, { foreignKey: 'managerId' });
 
+// Заявки - История обслуживания
+MaintenanceRecord.belongsTo(MaintenanceRequest, { foreignKey: 'requestId' });
+MaintenanceRequest.hasMany(MaintenanceRecord, { foreignKey: 'requestId' });
+
 // Экспортируем всё
 module.exports = {
     sequelize,

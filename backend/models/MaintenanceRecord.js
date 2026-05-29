@@ -11,14 +11,12 @@ const MaintenanceRecord = sequelize.define('MaintenanceRecord', {
     employeeId: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        field: 'ID_Сотрудника',
-        references: { model: 'Сотрудники', key: 'ID_Сотрудника' }
+        field: 'ID_Сотрудника'
     },
     transportId: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.STRING(20),
         allowNull: false,
-        field: 'ID_ТС',
-        references: { model: 'Транспортное_средство', key: 'ID_ТС' }
+        field: 'ID_ТС'
     },
     date: {
         type: DataTypes.DATEONLY,
@@ -28,6 +26,11 @@ const MaintenanceRecord = sequelize.define('MaintenanceRecord', {
     description: {
         type: DataTypes.TEXT,
         field: 'Описание'
+    },
+    requestId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        field: 'ID_Заявки'
     }
 }, {
     tableName: 'История_обслуживания',

@@ -10,10 +10,12 @@ function Maintenance() {
     const [error, setError] = useState('');
     const [showModal, setShowModal] = useState(false);
     const [editingRecord, setEditingRecord] = useState(null);
+    const [availableRequests, setAvailableRequests] = useState([]);
     const [formData, setFormData] = useState({
         transportId: '',
         date: '',
-        description: ''
+        description: '',
+        requestId: ''
     });
     const [sortColumn, setSortColumn] = useState('date');
     const [sortDirection, setSortDirection] = useState('desc');
@@ -43,11 +45,24 @@ function Maintenance() {
     // Фильтрация по выбранному ТС
     useEffect(() => {
         if (selectedTransportId) {
-            setFilteredRecords(records.filter(r => r.transportId === parseInt(selectedTransportId)));
+            setFilteredRecords(records.filter(r => r.transportId === selectedTransportId));
         } else {
             setFilteredRecords(records);
         }
     }, [records, selectedTransportId]);
+
+    useEffect(() => {
+        if (formData.transportId && !editingRecord) {
+            // Загружаем заявки для выбранного ТС (статус "В ожидании")
+            axios.get(`/api/maintenance-requests/for-transport/${formData.transportId}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            }).then(res => {
+                setAvailableRequests(res.data);
+            }).catch(err => console.error(err));
+        } else {
+            setAvailableRequests([]);
+        }
+    }, [formData.transportId, editingRecord, token]);
 
     // Сортировка отфильтрованных записей
     const sortedRecords = [...filteredRecords].sort((a, b) => {
@@ -103,7 +118,8 @@ function Maintenance() {
         setFormData({
             transportId: selectedTransportId || '',
             date: new Date().toISOString().slice(0, 10),
-            description: ''
+            description: '',
+            requestId: ''
         });
         setShowModal(true);
     };
@@ -113,13 +129,20 @@ function Maintenance() {
         setFormData({
             transportId: record.transportId,
             date: record.date,
-            description: record.description
+            description: record.description,
+            requestId: record.requestId || ''
         });
         setShowModal(true);
     };
 
     const handleFormChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        if (name === 'transportId') {
+            // Сбрасываем ранее выбранную заявку
+            setFormData(prev => ({ ...prev, [name]: value, requestId: '' }));
+        } else {
+            setFormData(prev => ({ ...prev, [name]: value }));
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -231,6 +254,18 @@ function Maintenance() {
                                         </option>
                                     ))}
                                 </select>
+                            </div>
+                            <div className="form-group">
+                                <label>Связанная заявка</label>
+                                <select name="requestId" className="form-input" value={formData.requestId || ''} onChange={handleFormChange} disabled={!formData.transportId}>
+                                    <option value="">-- Не выбрана --</option>
+                                    {availableRequests.map(req => (
+                                        <option key={req.id} value={req.id}>
+                                            Заявка #{req.id} (желаемая дата: {req.desiredDate || 'не указана'})
+                                        </option>
+                                    ))}
+                                </select>
+                                {!formData.transportId && <small>Сначала выберите транспортное средство</small>}
                             </div>
                             <div className="form-group">
                                 <label>Дата*</label>

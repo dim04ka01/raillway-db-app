@@ -3,7 +3,7 @@ const sequelize = require('../config/db');
 
 const Wagon = sequelize.define('Wagon', {
     transportId: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.STRING(20),
         primaryKey: true,
         field: 'ID_ТС',
         references: { model: 'Транспортное_средство', key: 'ID_ТС' }

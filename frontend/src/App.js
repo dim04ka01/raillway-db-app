@@ -15,6 +15,7 @@ import Wagons from './pages/Wagons';
 import LocomotiveModels from './pages/LocomotiveModels';
 import Locomotives from './pages/Locomotives';
 import Maintenance from './pages/Maintenance';
+import MaintenanceRequests from './pages/MaintenanceRequests';
 import Reports from './pages/Reports';
 import './global.css';
 
@@ -44,6 +45,7 @@ function App() {
                     <Route path="locomotive-models" element={<LocomotiveModels />} />
                     <Route path="locomotives" element={<Locomotives />} />
                     <Route path="maintenance" element={<Maintenance />} />
+                    <Route path="maintenance-requests" element={<MaintenanceRequests />} />
                     <Route path="reports" element={<Reports />} />
                 </Route>
             </Routes>
