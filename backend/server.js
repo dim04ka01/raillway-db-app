@@ -1,5 +1,6 @@
 ﻿const cors = require('cors');
 const { sequelize, Role, Department, Position, UserData, Employee } = require('./models'); // все модели
+const path = require('path');
 
 const express = require('express');
 const app = express();
@@ -40,6 +41,10 @@ app.use('/api/maintenance-requests', require('./routes/maintenanceRequests'));
 
 // Отчёты
 app.use('/api/reports', require('./routes/reports'));
+
+// Фото
+app.use('/api/uploads', require('./routes/uploads'));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); // для доступа к файлам
 
 // Функция инициализации базовых данных 
 async function initDatabase() {

@@ -16,6 +16,7 @@ const WagonModel = require('./WagonModel');
 const Wagon = require('./Wagon');
 const MaintenanceRecord = require('./MaintenanceRecord');
 const MaintenanceRequest = require('./MaintenanceRequest');
+const Attachment = require('./Attachment');
 
 // Связи
 // Отделы - Бригады
@@ -82,6 +83,15 @@ Employee.hasMany(MaintenanceRequest, { foreignKey: 'managerId' });
 MaintenanceRecord.belongsTo(MaintenanceRequest, { foreignKey: 'requestId' });
 MaintenanceRequest.hasMany(MaintenanceRecord, { foreignKey: 'requestId' });
 
+// Приложение - Заявка
+Attachment.belongsTo(MaintenanceRequest, { foreignKey: 'entityId', constraints: false });
+MaintenanceRequest.hasMany(Attachment, { foreignKey: 'entityId', scope: { entityType: 'MaintenanceRequest' } });
+
+// Приложение - История обслуживания
+Attachment.belongsTo(MaintenanceRecord, { foreignKey: 'entityId', constraints: false });
+MaintenanceRecord.hasMany(Attachment, { foreignKey: 'entityId', scope: { entityType: 'MaintenanceRecord' } });
+
+
 // Экспортируем всё
 module.exports = {
     sequelize,
@@ -99,5 +109,6 @@ module.exports = {
     WagonModel,
     Wagon,
     MaintenanceRecord,
-    MaintenanceRequest
+    MaintenanceRequest,
+    Attachment
 };

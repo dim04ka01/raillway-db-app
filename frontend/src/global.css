@@ -491,3 +491,165 @@ body {
     .profile-card p {
         margin: 10px 0;
     }
+
+.photo-uploader {
+    margin: 10px 0;
+}
+
+.photo-gallery {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.photo-item {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    cursor: pointer;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    overflow: hidden;
+    background-color: #f5f5f5;
+    transition: transform 0.2s;
+}
+
+    .photo-item:hover {
+        transform: scale(1.02);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    .photo-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+.photo-actions {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+}
+
+.btn-delete-small {
+    background: rgba(255,0,0,0.8);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+    .btn-delete-small:hover {
+        background: red;
+    }
+
+/* Полноэкранное модальное окно */
+.fullscreen-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    cursor: pointer;
+}
+
+.fullscreen-content {
+    position: relative;
+    max-width: 90%;
+    max-height: 90%;
+    cursor: default;
+}
+
+    .fullscreen-content img {
+        max-width: 100%;
+        max-height: 90vh;
+        object-fit: contain;
+        border-radius: 8px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    }
+
+.fullscreen-close {
+    position: absolute;
+    top: -40px;
+    right: 0;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 0 12px;
+}
+
+    .fullscreen-close:hover {
+        color: #ccc;
+    }
+
+/* Область выбора файлов */
+.file-upload-area {
+    margin-top: 5px;
+}
+
+.file-upload-label {
+    display: inline-block;
+    cursor: pointer;
+    background-color: #3498db;
+    color: white;
+    padding: 8px 15px;
+    border-radius: 4px;
+    transition: background 0.3s;
+}
+
+    .file-upload-label:hover {
+        background-color: #2980b9;
+    }
+
+/* Список выбранных файлов */
+.selected-files-list {
+    margin-top: 10px;
+    max-height: 150px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 5px;
+    background-color: #f9f9f9;
+}
+
+.selected-file-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 8px;
+    border-bottom: 1px solid #eee;
+    font-size: 13px;
+}
+
+    .selected-file-item:last-child {
+        border-bottom: none;
+    }
+
+.remove-file-btn {
+    background: none;
+    border: none;
+    color: #e74c3c;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 0 5px;
+}
+
+    .remove-file-btn:hover {
+        color: #c0392b;
+    }

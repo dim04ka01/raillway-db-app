@@ -1,5 +1,6 @@
 ﻿import { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
+import PhotoUploader from '../components/PhotoUploader';
 
 function MaintenanceRequests() {
     const [requests, setRequests] = useState([]);
@@ -15,6 +16,10 @@ function MaintenanceRequests() {
         desiredDate: '',
         description: ''
     });
+    const [showPhotoModal, setShowPhotoModal] = useState(false);
+    const [selectedRequestId, setSelectedRequestId] = useState(null);
+    const [selectedFiles, setSelectedFiles] = useState([]); // массив { file, preview }
+    const [uploadingFiles, setUploadingFiles] = useState(false);
     const [sortColumn, setSortColumn] = useState('createdAt');
     const [sortDirection, setSortDirection] = useState('desc');
     const token = localStorage.getItem('token');
@@ -41,7 +46,6 @@ function MaintenanceRequests() {
         fetchData();
     }, [fetchData]);
 
-    // Фильтрация по статусу
     useEffect(() => {
         if (statusFilter) {
             setFilteredRequests(requests.filter(r => r.status === statusFilter));
@@ -50,7 +54,6 @@ function MaintenanceRequests() {
         }
     }, [requests, statusFilter]);
 
-    // Сортировка
     const sortedRequests = [...filteredRequests].sort((a, b) => {
         let aVal, bVal;
         if (sortColumn === 'transport') {
@@ -122,6 +125,10 @@ function MaintenanceRequests() {
             desiredDate: new Date().toISOString().slice(0, 10),
             description: ''
         });
+        if (selectedFiles.length) {
+            selectedFiles.forEach(item => URL.revokeObjectURL(item.preview));
+            setSelectedFiles([]);
+        }
         setShowModal(true);
     };
 
@@ -136,6 +143,24 @@ function MaintenanceRequests() {
         setShowModal(true);
     };
 
+    const handleFileSelect = (e) => {
+        const files = Array.from(e.target.files);
+        const newFiles = files.map(file => ({
+            file,
+            preview: URL.createObjectURL(file)
+        }));
+        setSelectedFiles(prev => [...prev, ...newFiles]);
+        e.target.value = '';
+    };
+
+    const removeFile = (index) => {
+        const file = selectedFiles[index];
+        if (file && file.preview) {
+            URL.revokeObjectURL(file.preview);
+        }
+        setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    };
+
     const handleFormChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
@@ -148,16 +173,38 @@ function MaintenanceRequests() {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 alert('Заявка обновлена');
+                setShowModal(false);
+                fetchData();
             } else {
-                await axios.post('/api/maintenance-requests', formData, {
+                setUploadingFiles(true);
+                const response = await axios.post('/api/maintenance-requests', formData, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
+                const newRequestId = response.data.id;
+
+                if (selectedFiles.length > 0) {
+                    const uploadPromises = selectedFiles.map(async (item) => {
+                        const fd = new FormData();
+                        fd.append('file', item.file);
+                        fd.append('entityType', 'MaintenanceRequest');
+                        fd.append('entityId', newRequestId);
+                        await axios.post('/api/uploads', fd, {
+                            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
+                        });
+                    });
+                    await Promise.all(uploadPromises);
+                    selectedFiles.forEach(item => URL.revokeObjectURL(item.preview));
+                    setSelectedFiles([]);
+                }
+
                 alert('Заявка создана');
+                setShowModal(false);
+                fetchData();
             }
-            setShowModal(false);
-            fetchData();
         } catch (err) {
             alert(err.response?.data?.error || 'Ошибка сохранения');
+        } finally {
+            setUploadingFiles(false);
         }
     };
 
@@ -185,7 +232,7 @@ function MaintenanceRequests() {
 
             <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center' }}>
                 <label>Фильтр по статусу:</label>
-                <select className="form-input" style={{ width: '150px' }} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+                <select className="form-input" style={{ width: '130px' }} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
                     <option value="">Все</option>
                     <option value="В ожидании">В ожидании</option>
                     <option value="Выполнена">Выполнена</option>
@@ -202,6 +249,7 @@ function MaintenanceRequests() {
                         <th onClick={() => handleSort('desiredDate')}>Желаемая дата <span className="sort-indicator">{getSortIndicator('desiredDate')}</span></th>
                         <th onClick={() => handleSort('status')}>Статус <span className="sort-indicator">{getSortIndicator('status')}</span></th>
                         <th>Описание</th>
+                        <th>Фото</th>
                         <th>Действия</th>
                     </tr>
                 </thead>
@@ -217,7 +265,7 @@ function MaintenanceRequests() {
                                 {isAdmin ? (
                                     <select
                                         className="form-input"
-                                        style={{ width: '120px' }}
+                                        style={{ width: '130px' }}
                                         value={req.status}
                                         onChange={(e) => handleStatusChange(req.id, e.target.value)}
                                     >
@@ -230,6 +278,11 @@ function MaintenanceRequests() {
                             </td>
                             <td>{req.description || '—'}</td>
                             <td>
+                                {req.photoCount > 0 && (
+                                    <button onClick={() => { setSelectedRequestId(req.id); setShowPhotoModal(true); }} className="btn-photo">📷</button>
+                                )}
+                            </td>
+                            <td>
                                 {isAdmin && (
                                     <>
                                         <button onClick={() => openEditModal(req)} className="btn-edit">✏️</button>
@@ -240,46 +293,114 @@ function MaintenanceRequests() {
                         </tr>
                     ))}
                     {sortedRequests.length === 0 && (
-                        <tr><td colSpan="8">Нет заявок</td></tr>
+                        <td><td colSpan="9">Нет заявок</td></td>
                     )}
                 </tbody>
             </table>
 
             {showModal && (
-                <div className="modal-overlay" onClick={() => setShowModal(false)}>
-                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                        <h2>{editingRequest ? 'Редактировать заявку' : 'Создать заявку'}</h2>
-                        <form onSubmit={handleSubmit}>
-                            <div className="form-group">
-                                <label>Транспортное средство*</label>
-                                <select name="transportId" className="form-input" value={formData.transportId} onChange={handleFormChange} required>
-                                    <option value="">Выберите</option>
-                                    {transportList.map(ts => (
-                                        <option key={ts.id} value={ts.id}>
-                                            {ts.type === 'locomotive' ? `Локомотив #${ts.id}` : `Вагон #${ts.id}`}
-                                            {ts.modelName ? ` (${ts.modelName})` : ''}
-                                        </option>
-                                    ))}
-                                </select>
+                        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+                            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                                <h2>{editingRequest ? 'Редактировать заявку' : 'Создать заявку'}</h2>
+                                <form onSubmit={handleSubmit}>
+                                    <div className="form-group">
+                                        <label>Транспортное средство*</label>
+                                        <select name="transportId" className="form-input" value={formData.transportId} onChange={handleFormChange} required>
+                                            <option value="">Выберите</option>
+                                            {transportList.map(ts => (
+                                                <option key={ts.id} value={ts.id}>
+                                                    {ts.type === 'locomotive' ? `Локомотив #${ts.id}` : `Вагон #${ts.id}`}
+                                                    {ts.modelName ? ` (${ts.modelName})` : ''}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Желаемая дата выполнения</label>
+                                        <input type="date" name="desiredDate" className="form-input" value={formData.desiredDate} onChange={handleFormChange} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Описание</label>
+                                        <textarea name="description" className="form-input" rows="3" value={formData.description} onChange={handleFormChange}></textarea>
+                                    </div>
+
+                                    {editingRequest && (
+                                        <div style={{ marginTop: '20px', borderTop: '1px solid #ccc', paddingTop: '15px' }}>
+                                            <h4>Фотографии заявки</h4>
+                                            <PhotoUploader
+                                                entityType="MaintenanceRequest"
+                                                entityId={editingRequest.id}
+                                                onUpload={() => fetchData()}
+                                            />
+                                        </div>
+                                    )}
+
+                                    {!editingRequest && (
+                                        <div className="form-group">
+                                            <label>Фотографии (можно выбрать несколько)</label>
+                                            <div className="photo-uploader">
+                                                <div className="photo-upload-control">
+                                                    <label className="btn btn-secondary">
+                                                        Выбрать фото
+                                                        <input
+                                                            type="file"
+                                                            accept="image/*"
+                                                            multiple
+                                                            onChange={handleFileSelect}
+                                                            style={{ display: 'none' }}
+                                                        />
+                                                    </label>
+                                                </div>
+                                                <div className="photo-gallery">
+                                                    {selectedFiles.map((item, idx) => (
+                                                        <div key={idx} className="photo-item">
+                                                            <img src={item.preview} alt={item.file.name} />
+                                                            <div className="photo-actions">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => removeFile(idx)}
+                                                                    className="btn-delete-small"
+                                                                >
+                                                                    🗑️
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            {uploadingFiles && <div>Загрузка фото...</div>}
+                                        </div>
+                                    )}
+
+                                    <div className="modal-buttons">
+                                        <button type="button" className="btn" onClick={() => setShowModal(false)}>Отмена</button>
+                                        <button type="submit" className="btn btn-primary" disabled={uploadingFiles}>
+                                            {uploadingFiles ? 'Сохранение...' : 'Сохранить'}
+                                        </button>
+                                    </div>
+                                </form>
                             </div>
-                            <div className="form-group">
-                                <label>Желаемая дата выполнения</label>
-                                <input type="date" name="desiredDate" className="form-input" value={formData.desiredDate} onChange={handleFormChange} />
+                        </div>
+                    )}
+
+                    {showPhotoModal && (
+                        <div className="modal-overlay" onClick={() => setShowPhotoModal(false)}>
+                            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                                <h3>Фотографии заявки #{selectedRequestId}</h3>
+                                <PhotoUploader
+                                    entityType="MaintenanceRequest"
+                                    entityId={selectedRequestId}
+                                    readOnly={true}
+                                    onUpload={() => { }}
+                                />
+                                <div className="modal-buttons">
+                                    <button className="btn" onClick={() => setShowPhotoModal(false)}>Закрыть</button>
+                                </div>
                             </div>
-                            <div className="form-group">
-                                <label>Описание</label>
-                                <textarea name="description" className="form-input" rows="3" value={formData.description} onChange={handleFormChange}></textarea>
-                            </div>
-                            <div className="modal-buttons">
-                                <button type="button" className="btn" onClick={() => setShowModal(false)}>Отмена</button>
-                                <button type="submit" className="btn btn-primary">Сохранить</button>
-                            </div>
-                        </form>
-                    </div>
+                        </div>
+                    )}
                 </div>
-            )}
-        </div>
-    );
+                );
 }
 
-export default MaintenanceRequests;
+                export default MaintenanceRequests;

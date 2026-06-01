@@ -1,5 +1,5 @@
 ﻿const router = require('express').Router();
-const { MaintenanceRecord, Transport, Locomotive, Wagon, Employee } = require('../models');
+const { Attachment, MaintenanceRequest, MaintenanceRecord, Transport, Locomotive, Wagon, Employee } = require('../models');
 const { isAuthenticated, isAdmin } = require('../middleware/auth');
 
 // Вспомогательная функция для определения типа транспорта (локомотив/вагон)
@@ -21,12 +21,15 @@ router.get('/', isAuthenticated, async (req, res) => {
             ],
             order: [['date', 'DESC']]
         });
-        // Добавляем тип транспорта для каждой записи
         const enriched = await Promise.all(records.map(async (record) => {
             const type = await getTransportType(record.transportId);
+            const photoCount = await Attachment.count({
+                where: { entityType: 'MaintenanceRecord', entityId: record.id }
+            });
             return {
                 ...record.toJSON(),
-                transportType: type
+                transportType: type,
+                photoCount
             };
         }));
         res.json(enriched);

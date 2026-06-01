@@ -1,5 +1,6 @@
 ﻿import { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
+import PhotoUploader from '../components/PhotoUploader';
 
 function Maintenance() {
     const [records, setRecords] = useState([]);
@@ -11,6 +12,10 @@ function Maintenance() {
     const [showModal, setShowModal] = useState(false);
     const [editingRecord, setEditingRecord] = useState(null);
     const [availableRequests, setAvailableRequests] = useState([]);
+    const [showPhotoModal, setShowPhotoModal] = useState(false);
+    const [selectedRecordId, setSelectedRecordId] = useState(null);
+    const [selectedFiles, setSelectedFiles] = useState([]); // массив { file, preview }
+    const [uploadingFiles, setUploadingFiles] = useState(false);
     const [formData, setFormData] = useState({
         transportId: '',
         date: '',
@@ -51,9 +56,9 @@ function Maintenance() {
         }
     }, [records, selectedTransportId]);
 
+    // Загрузка активных заявок для выбранного ТС в форме создания
     useEffect(() => {
         if (formData.transportId && !editingRecord) {
-            // Загружаем заявки для выбранного ТС (статус "В ожидании")
             axios.get(`/api/maintenance-requests/for-transport/${formData.transportId}`, {
                 headers: { Authorization: `Bearer ${token}` }
             }).then(res => {
@@ -64,7 +69,7 @@ function Maintenance() {
         }
     }, [formData.transportId, editingRecord, token]);
 
-    // Сортировка отфильтрованных записей
+    // Сортировка записей
     const sortedRecords = [...filteredRecords].sort((a, b) => {
         let aVal, bVal;
         if (sortColumn === 'transport') {
@@ -121,6 +126,10 @@ function Maintenance() {
             description: '',
             requestId: ''
         });
+        if (selectedFiles.length) {
+            selectedFiles.forEach(item => URL.revokeObjectURL(item.preview));
+            setSelectedFiles([]);
+        }
         setShowModal(true);
     };
 
@@ -135,10 +144,27 @@ function Maintenance() {
         setShowModal(true);
     };
 
+    const handleFileSelect = (e) => {
+        const files = Array.from(e.target.files);
+        const newFiles = files.map(file => ({
+            file,
+            preview: URL.createObjectURL(file)
+        }));
+        setSelectedFiles(prev => [...prev, ...newFiles]);
+        e.target.value = '';
+    };
+
+    const removeFile = (index) => {
+        const file = selectedFiles[index];
+        if (file && file.preview) {
+            URL.revokeObjectURL(file.preview);
+        }
+        setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    };
+
     const handleFormChange = (e) => {
         const { name, value } = e.target;
         if (name === 'transportId') {
-            // Сбрасываем ранее выбранную заявку
             setFormData(prev => ({ ...prev, [name]: value, requestId: '' }));
         } else {
             setFormData(prev => ({ ...prev, [name]: value }));
@@ -152,31 +178,56 @@ function Maintenance() {
                 await axios.put(`/api/maintenance/${editingRecord.id}`, formData, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
+                alert('Запись обновлена');
+                setShowModal(false);
+                fetchData();
             } else {
-                await axios.post('/api/maintenance', formData, {
+                setUploadingFiles(true);
+                const response = await axios.post('/api/maintenance', formData, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
+                const newRecordId = response.data.id;
+
+                if (selectedFiles.length > 0) {
+                    const uploadPromises = selectedFiles.map(async (item) => {
+                        const fd = new FormData();
+                        fd.append('file', item.file);
+                        fd.append('entityType', 'MaintenanceRecord');
+                        fd.append('entityId', newRecordId);
+                        await axios.post('/api/uploads', fd, {
+                            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
+                        });
+                    });
+                    await Promise.all(uploadPromises);
+                    selectedFiles.forEach(item => URL.revokeObjectURL(item.preview));
+                    setSelectedFiles([]);
+                }
+
+                alert('Запись создана');
+                setShowModal(false);
+                fetchData();
             }
-            setShowModal(false);
-            fetchData();
         } catch (err) {
             alert(err.response?.data?.error || 'Ошибка сохранения');
+        } finally {
+            setUploadingFiles(false);
         }
+    };
+
+    const getTransportLabel = (record) => {
+        if (!transportList.length) return 'Загрузка...';
+        let transport = transportList.find(t => String(t.id) === String(record.transportId));
+        if (!transport) return `ТС #${record.transportId}`;
+        if (transport.type === 'locomotive') {
+            return `Локомотив #${transport.id} (${transport.modelName || 'нет модели'})`;
+        } else if (transport.type === 'wagon') {
+            return `Вагон #${transport.id} (${transport.modelName || 'нет модели'}, тип: ${transport.wagonType || 'не указан'})`;
+        }
+        return `ТС #${transport.id}`;
     };
 
     if (loading) return <div className="loading">Загрузка...</div>;
     if (error) return <div className="error">{error}</div>;
-
-    // Получить отображаемое название ТС
-    const getTransportLabel = (ts) => {
-        if (!ts) return '—';
-        if (ts.type === 'locomotive') {
-            return `Локомотив #${ts.id} (${ts.modelName || 'нет модели'})`;
-        } else if (ts.type === 'wagon') {
-            return `Вагон #${ts.id} (${ts.modelName || 'нет модели'}, тип: ${ts.wagonType || 'не указан'})`;
-        }
-        return `ТС #${ts.id}`;
-    };
 
     return (
         <div>
@@ -214,6 +265,7 @@ function Maintenance() {
                         <th onClick={() => handleSort('employee')}>Сотрудник <span className="sort-indicator">{getSortIndicator('employee')}</span></th>
                         <th onClick={() => handleSort('date')}>Дата <span className="sort-indicator">{getSortIndicator('date')}</span></th>
                         <th onClick={() => handleSort('description')}>Описание <span className="sort-indicator">{getSortIndicator('description')}</span></th>
+                        <th>Фото</th>
                         <th>Действия</th>
                     </tr>
                 </thead>
@@ -226,17 +278,23 @@ function Maintenance() {
                             <td>{record.date}</td>
                             <td>{record.description}</td>
                             <td>
+                                {record.photoCount > 0 && (
+                                    <button onClick={() => { setSelectedRecordId(record.id); setShowPhotoModal(true); }} className="btn-photo">📷</button>
+                                )}
+                            </td>
+                            <td>
                                 <button onClick={() => openEditModal(record)} className="btn-edit">✏️</button>
                                 {isAdmin && <button onClick={() => handleDelete(record.id)} className="btn-delete">🗑️</button>}
                             </td>
                         </tr>
                     ))}
                     {sortedRecords.length === 0 && (
-                        <tr><td colSpan="6">Нет записей</td></tr>
+                        <td><td colSpan="7">Нет записей</td></td>
                     )}
                 </tbody>
             </table>
 
+            {/* Модальное окно создания/редактирования */}
             {showModal && (
                 <div className="modal-overlay" onClick={() => setShowModal(false)}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -274,11 +332,80 @@ function Maintenance() {
                                 <label>Описание</label>
                                 <textarea name="description" className="form-input" rows="3" value={formData.description} onChange={handleFormChange}></textarea>
                             </div>
+
+                            {editingRecord && (
+                                <div style={{ marginTop: '20px', borderTop: '1px solid #ccc', paddingTop: '15px' }}>
+                                    <h4>Фотографии записи</h4>
+                                    <PhotoUploader
+                                        entityType="MaintenanceRecord"
+                                        entityId={editingRecord.id}
+                                        onUpload={() => fetchData()}
+                                    />
+                                </div>
+                            )}
+
+                            {!editingRecord && (
+                                <div className="form-group">
+                                    <label>Фотографии (можно выбрать несколько)</label>
+                                    <div className="photo-uploader">
+                                        <div className="photo-upload-control">
+                                            <label className="btn btn-secondary">
+                                                Выбрать фото
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    multiple
+                                                    onChange={handleFileSelect}
+                                                    style={{ display: 'none' }}
+                                                />
+                                            </label>
+                                        </div>
+                                        <div className="photo-gallery">
+                                            {selectedFiles.map((item, idx) => (
+                                                <div key={idx} className="photo-item">
+                                                    <img src={item.preview} alt={item.file.name} />
+                                                    <div className="photo-actions">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeFile(idx)}
+                                                            className="btn-delete-small"
+                                                        >
+                                                            🗑️
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    {uploadingFiles && <div>Загрузка фото...</div>}
+                                </div>
+                            )}
+
                             <div className="modal-buttons">
                                 <button type="button" className="btn" onClick={() => setShowModal(false)}>Отмена</button>
-                                <button type="submit" className="btn btn-primary">Сохранить</button>
+                                <button type="submit" className="btn btn-primary" disabled={uploadingFiles}>
+                                    {uploadingFiles ? 'Сохранение...' : 'Сохранить'}
+                                </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Модальное окно просмотра фото */}
+            {showPhotoModal && (
+                <div className="modal-overlay" onClick={() => setShowPhotoModal(false)}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <h3>Фотографии записи #{selectedRecordId}</h3>
+                        <PhotoUploader
+                            entityType="MaintenanceRecord"
+                            entityId={selectedRecordId}
+                            readOnly={true}
+                            onUpload={() => { }}
+                        />
+                        <div className="modal-buttons">
+                            <button className="btn" onClick={() => setShowPhotoModal(false)}>Закрыть</button>
+                        </div>
                     </div>
                 </div>
             )}

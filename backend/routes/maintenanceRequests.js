@@ -1,5 +1,5 @@
 ﻿const router = require('express').Router();
-const { MaintenanceRequest, Transport, Locomotive, Wagon, Employee, LocomotiveModel, WagonModel, WagonType } = require('../models');
+const { MaintenanceRequest, Transport, Locomotive, Wagon, Employee, LocomotiveModel, WagonModel, WagonType, Attachment } = require('../models');
 const { isAuthenticated, isManagerOrAdmin, isAdmin } = require('../middleware/auth');
 
 // Вспомогательная функция для получения информации о ТС (тип, модель)
@@ -40,9 +40,17 @@ router.get('/', isAuthenticated, async (req, res) => {
             ],
             order: [['createdAt', 'DESC']]
         });
-        const enriched = await Promise.all(requests.map(async (req) => {
-            const transportInfo = await enrichTransport(req.transportId);
-            return { ...req.toJSON(), transportInfo };
+
+        const enriched = await Promise.all(requests.map(async (request) => {
+            const transportInfo = await enrichTransport(request.transportId);
+            const photoCount = await Attachment.count({
+                where: { entityType: 'MaintenanceRequest', entityId: request.id }
+            });
+            return {
+                ...request.toJSON(),
+                transportInfo,
+                photoCount
+            };
         }));
         res.json(enriched);
     } catch (err) {
