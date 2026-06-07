@@ -1,0 +1,1 @@
+﻿console.log('LolПривтеввHelloghbdfmtddhfdhfывпыыввфпфпфыd from Node.js');
